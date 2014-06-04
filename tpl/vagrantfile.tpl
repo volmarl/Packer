@@ -2,8 +2,8 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-    config.vm.define "vagrant-ubuntu"
-    config.vm.box = "aerospike-ubuntu"
+    config.vm.define "vagrant-as"
+    config.vm.box = "aerospike-vm"
     config.vm.network "forwarded_port", guest: 3000, host: 3000 , auto_correct: true
     config.vm.network "forwarded_port", guest: 8081, host: 8081 , auto_correct: true 
     # Berkshelf
@@ -13,20 +13,20 @@ Vagrant.configure("2") do |config|
     # config.vm.provision :shell, :inline => "C:\\vagrant\\scripts\\HelloWorld.bat"
   
     config.vm.provider :virtualbox do |v, override|
-        v.gui = true
+        v.gui = false
         v.customize ["modifyvm", :id, "--memory", 1536]
         v.customize ["modifyvm", :id, "--cpus", 2]
-        v.customize ["modifyvm", :id, "--vram", "256"]
-        v.customize ["setextradata", "global", "GUI/MaxGuestResolution", "any"]
-        v.customize ["setextradata", :id, "CustomVideoMode1", "1024x768x32"]
-        v.customize ["modifyvm", :id, "--ioapic", "on"]
-        v.customize ["modifyvm", :id, "--rtcuseutc", "on"]
-        v.customize ["modifyvm", :id, "--accelerate3d", "on"]
-        v.customize ["modifyvm", :id, "--clipboard", "bidirectional"]
+#        v.customize ["modifyvm", :id, "--vram", "256"]
+#        v.customize ["setextradata", "global", "GUI/MaxGuestResolution", "any"]
+#        v.customize ["setextradata", :id, "CustomVideoMode1", "1024x768x32"]
+#        v.customize ["modifyvm", :id, "--ioapic", "on"]
+#        v.customize ["modifyvm", :id, "--rtcuseutc", "on"]
+#        v.customize ["modifyvm", :id, "--accelerate3d", "on"]
+#        v.customize ["modifyvm", :id, "--clipboard", "bidirectional"]
     end
 
     config.vm.provider :vmware_fusion do |v, override|
-        v.gui = true
+        v.gui = false
         v.vmx["memsize"] = "1536"
         v.vmx["numvcpus"] = "2"
         v.vmx["cpuid.coresPerSocket"] = "1"
@@ -35,7 +35,7 @@ Vagrant.configure("2") do |config|
     end
 
     config.vm.provider :vmware_workstation do |v, override|
-        v.gui = true
+        v.gui = false
         v.vmx["memsize"] = "1536"
         v.vmx["numvcpus"] = "2"
         v.vmx["cpuid.coresPerSocket"] = "1"
