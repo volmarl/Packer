@@ -1,0 +1,24 @@
+Thanks for trying out Aerospike, the world best In-memory Key store database..
+
+This box contains a full install of the community edition of our software.
+We have also included a copy of AMC our  monitoring service.
+
+To start your VM : 
+
+vagrant up
+
+To delete your VM :
+
+vagrant destroy
+
+To ssh to your VM :
+
+vagrant ssh
+
+More info on Vagrant can be found at :
+
+http://docs.vagrantup.com/v2/getting-started/index.html
+
+Also please visit Aerospike to learn more about our Database :
+
+http://www.aerospike.com
