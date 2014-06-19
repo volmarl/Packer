@@ -1,0 +1,14 @@
+---
+# file: roles/riak/riaknode/handlers/main.yml
+
+# Commit changes to Riak cluster  
+- name: commit cluster changes
+  riak: command=commit
+
+# Wait for changes to be replicated across ring to all data nodes
+- name: wait for handoffs
+  riak: wait_for_handoffs=600
+
+# Wait for ring to sync with data nodes
+- name: wait for ring
+  riak: wait_for_ring=600

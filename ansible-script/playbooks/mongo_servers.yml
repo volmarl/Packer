@@ -1,0 +1,25 @@
+---
+# file: servers.yml
+- hosts: all
+  sudo: no
+  gather_facts: yes
+  roles:
+    - common/pre
+    - mongo/common
+
+- hosts: mongoc
+  roles:
+    - mongo/mongoc
+    - common/post
+
+- hosts: mongod
+  roles:
+    - mongo/mongod
+    - common/post
+
+- hosts: mongos
+  roles:
+    - mongo/mongos
+    - common/post
+
+

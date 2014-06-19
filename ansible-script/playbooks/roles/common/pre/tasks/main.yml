@@ -1,0 +1,53 @@
+---
+# file: roles/common/pre/tasks/main.yml
+
+- name: Update hostname <rolename>-<index>
+  hostname: name={{ hostvars[inventory_hostname]['host_name'] }}
+  
+- name: Update motd
+  template: src="../templates/motd.j2.template" dest="/etc/motd" backup=yes owner=root group=root
+
+- name: Update hosts file with all cluster server members
+  template: src="../templates/hosts.j2.template" dest="/etc/hosts" backup=yes owner=root group=root mode=0755
+
+- name: Create mgmt group
+  group: name=mgmt state=present system=no gid=1010
+
+- name: Create monitoring group
+  group: name=monitor state=present system=no gid=1011
+
+- name: Create dev group
+  group: name=dev state=present system=no gid=2000
+
+- name: Create ansible user
+  user: name=ansible comment="Ansible's Account" uid=1010 group=dev groups=mgmt home=/home/ansible state=present ssh_key_type=rsa generate_ssh_key=yes
+
+- name: Create monitor user
+  user: name=monitor comment="Monitoring Account" uid=1011 group=dev groups=monitor home=/home/monitor state=present ssh_key_type=rsa generate_ssh_key=yes
+
+- name: Update apt repositories
+  apt: update_cache=yes
+
+- name: Upgrade all packages on system
+  apt: upgrade=safe
+
+  # Update motd after apt upgrade
+- name: Update motd
+  template: src="../templates/motd.j2.template" dest="/etc/motd" backup=yes owner=root group=root
+
+- name: Install common basic packages
+  apt: pkg=$item
+  with_items: $install_pkgs
+
+- name: Enabled key-based ssh access for root and ansible user(s)
+  authorized_key: user=$item key='$FILE({{ public_key_file }})'
+  with_items: $authusers
+
+- name: Create sudoers file
+  template: src="../templates/sudoers.j2.template" dest="/etc/sudoers" backup=yes owner=root group=root mode=0440
+
+- name: Update sshd conf
+  template: src="../templates/sshd_config.j2.template" dest="/etc/ssh/sshd_config" backup=yes owner=root group=root mode=644
+  notify:
+    - Restarting ssh service
+  tags: sshd

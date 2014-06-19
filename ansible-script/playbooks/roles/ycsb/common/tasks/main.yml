@@ -1,0 +1,43 @@
+---
+
+- name: Check current timezone
+  shell: cat /etc/timezone
+  register: current_zone
+
+- name: Set timezone variables
+  copy: content={{my_zone}}
+        dest=/etc/timezone
+        owner=root
+        group=root
+        mode=0644
+        backup=yes
+  when: current_zone.stdout != my_zone
+  notify:
+  - update timezone
+
+- name: Add Oracle Java repo
+  apt_repository: repo='ppa:webupd8team/java' state=present update_cache=yes
+
+- name: Accept Oracle License
+  shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+
+- name: Install Oracle Java
+  apt: name=oracle-java8-installer state=latest
+
+- name: Install Pip
+  apt: name=python-pip state=latest
+
+- name: Install Python Dependencies
+  pip: name={{item}}
+  with_items:
+  - fabric
+  - pytz
+
+- name: Clear log files from previous runs
+  shell: chdir=/run/shm rm *.out *.err
+  ignore_errors: yes
+
+- name: Add YCSB Server key to known_hosts
+  lineinfile: create=yes insertbefore=BOF dest=~/.ssh/authorized_keys state=present line="{{ server_ycsb_pubkey }}"
+
+   

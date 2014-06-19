@@ -1,0 +1,82 @@
+---
+# The playbook for hadoop datanode tasks
+# Note that the stat wildcard below conforms to the GoGrid raw disk device
+# naming convention for PV raw disk VM's
+- name: Capture raw disks
+  shell: stat --printf="%n\n" /dev/xvd[f-z][a-z]
+  register: rawdevs
+  when: hadoop.data_raw_disks
+
+- name: Capture unpartitioned disks
+  shell: parted -l | grep "Error" | cut -d':' -f 2 | sed -e "s/ //g"
+  register: unpartitioned
+  when: hadoop.data_raw_disks
+
+- name: Set raw disk facts
+  set_fact:
+    rawdev_list: "{{ rawdevs.stdout.split() }}"
+    unpartitioned_list: "{{ unpartitioned.stdout.split() }}"
+  when: hadoop.data_raw_disks
+
+- name: Partition unpartitioned disks
+  shell: parted -s -a optimal {{ item }} mklabel gpt -- mkpart primary ext4 1 -1
+  with_items: unpartitioned_list
+  when: hadoop.data_raw_disks
+
+- name: Prepare raw disk filesystems
+  filesystem: fstype=ext4 dev={{ item }}1 opts="-m 1 -O dir_index,extent,sparse_super"
+  with_items: rawdev_list
+  when: hadoop.data_raw_disks
+
+- name: Create hdfs raw disk mount points
+  file: path={{ hadoop.dfs_data_dir_prefix }}/{{ item.0 }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} state=directory mode=0750
+  with_indexed_items: rawdev_list
+  when: hadoop.data_raw_disks
+
+- name: Update fstab for hdfs raw disks
+  mount: state=mounted src={{ item.1 }}1 name={{ hadoop.dfs_data_dir_prefix }}/{{ item.0 }} fstype=ext4 opts=noatime,nodiratime
+  with_indexed_items: rawdev_list
+  when: hadoop.data_raw_disks
+
+- name: Create hdfs data directories for raw
+  file: path={{ hadoop.dfs_data_dir_prefix }}/{{ item.0 }}/{{ hadoop.dfs_data_dir_suffix }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} state=directory mode=0750
+  with_indexed_items: rawdev_list
+  when: hadoop.data_raw_disks
+
+- name: Create yarn local directory for raw
+  file: path={{ hadoop.dfs_data_dir_prefix }}/{{ item.0 }}/{{ hadoop.yarn_local_dir_suffix }} owner={{ hadoop.yarn_user }} group={{ hadoop.hadoop_group }} mode=0750 state=directory
+  with_indexed_items: rawdev_list
+  when: hadoop.data_raw_disks
+
+- name: Create yarn local log directory for raw
+  file: path={{ hadoop.dfs_data_dir_prefix }}/{{ item.0 }}/{{ hadoop.yarn_local_log_suffix }} owner={{ hadoop.yarn_user }} group={{ hadoop.hadoop_group }} mode=0750 state=directory
+  with_indexed_items: rawdev_list
+  when: hadoop.data_raw_disks
+
+- name: Create hdfs data directory for non-raw
+  file: path={{ hadoop.dfs_data_dir_prefix }}/{{ hadoop.dfs_data_dir_suffix }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} state=directory mode=0750
+  when: not hadoop.data_raw_disks
+
+- name: Create yarn local directory for non-raw
+  file: path={{ hadoop.dfs_data_dir_prefix }}/{{ hadoop.yarn_local_dir_suffix }} owner={{ hadoop.yarn_user }} group={{ hadoop.hadoop_group }} mode=0750 state=directory
+  when: not hadoop.data_raw_disks
+
+- name: Create yarn local log directory for non-raw
+  file: path={{ hadoop.dfs_data_dir_prefix }}/{{ hadoop.yarn_local_log_suffix }} owner={{ hadoop.yarn_user }} group={{ hadoop.hadoop_group }} mode=0750 state=directory
+  when: not hadoop.data_raw_disks
+
+# Run base hadoop config generation
+- include: ../../common/tasks/core_config.yml
+
+- name: Create datanode init scripts
+  template: src={{ item }}.j2 dest=/etc/init.d/{{ item }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} mode=0755
+  with_items: hadoop_datanode_svcs
+
+- name: Set runlevels to restart on boot for datanode init scripts
+  shell: update-rc.d {{ item }} defaults 92 8
+  with_items: hadoop_datanode_svcs
+
+- name: Start hadoop datanode services
+  service: name={{ item }} state=restarted
+  with_items: hadoop_datanode_svcs
+

@@ -1,0 +1,66 @@
+- name: Update Datastax community edition to packages
+  copy: src=../../common/files/datastax.list dest=/etc/apt/sources.list.d/datastax.list backup=yes force=yes
+
+- name: Update Cassandra security limits config
+  copy: src=../files/cassandra.conf dest=/etc/security/limits.d/cassandra.conf backup=yes force=yes
+
+- name: Add cassandra.conf sysctl file
+  copy: src=../files/cassandra-sysctl.conf dest=/etc/sysctl.d/cassandra.conf backup=yes force=yes
+
+- name: Update apt and get apt-key for Cassandra by DataStax
+  apt_key: url=http://debian.datastax.com/debian/repo_key state=present
+
+- name: Update apt and upgrade
+  apt: update-cache=yes
+
+- name: Install Cassandra basic support packages
+  apt: pkg=$item
+  with_items: $install_pkgs
+  
+- name: Install Datastax Community Edition
+  apt: pkg=dsc20
+      
+- name: Install Python CQL
+  pip: name=cql use_mirrors=no
+  
+- name: Install Datastax Python Driver
+  pip: name=cassandra-driver use_mirrors=no
+
+- name: Create a group based on cassandra node type.
+  group_by: key={{ node_type }}
+
+- name: Stop the Cassandra service
+  service: name=cassandra state=stopped
+
+- name: Remove the Cassandra data files
+  shell: rm -rf /var/lib/cassandra/*
+
+- name: Create the Cassandra configuration file
+  template: src=cassandra.yaml.j2 dest=/etc/cassandra/cassandra.yaml mode=0644
+
+- name: Start the first node (seed 0)
+  service: name=cassandra state=started
+  when: hostvars[inventory_hostname]['node_type'] == 'first'
+
+- name: Wait for first node to start (seed 0)
+  wait_for: path=/var/run/cassandra/cassandra.pid timeout=60
+  when: hostvars[inventory_hostname]['node_type'] == 'first'
+
+- name: Start the last node (seed 1)
+  service: name=cassandra state=started
+  when: hostvars[inventory_hostname]['node_type'] == 'last'
+
+- name: Wait for last node to start (seed 1)
+  wait_for: path=/var/run/cassandra/cassandra.pid timeout=60
+  when: hostvars[inventory_hostname]['node_type'] == 'last'
+
+- name: Start the remaining nodes
+  service: name=cassandra state=started
+  when: hostvars[inventory_hostname]['node_type'] != 'first' and hostvars[inventory_hostname]['node_type'] != 'last'
+
+# Wait for Cassandra to report that the cluster is running
+- action: shell nodetool statusbinary | tail -1
+  register: result
+  until: result.stdout == "running"
+  retries: 20
+  delay: 10

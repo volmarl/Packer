@@ -1,0 +1,27 @@
+---
+# The playbook for hadoop common config generation tasks --
+# Should be included after datanode disks have been determined
+- name: Copy the hadoop configuration files
+  template: src={{ item }}.j2 dest={{ hadoop.hadoop_conf_dir }}/{{ item }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} mode=0644
+  with_items:
+    - capacity-scheduler.xml
+    - commons-logging.properties
+    - container-executor.cfg
+    - core-site.xml
+    - hadoop-metrics2.properties-GANGLIA
+    - hadoop-metrics2.properties
+    - hadoop-policy.xml
+    - hdfs-site.xml
+    - log4j.properties
+    - mapred-queue-acls.xml
+    - mapred-site.xml
+    - yarn-site.xml
+
+- name: Copy the hadoop configuration scripts
+  template: src={{ item }}.j2 dest={{ hadoop.hadoop_conf_dir }}/{{ item }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} mode=0755
+  with_items:
+    - hadoop-env.sh
+    - health_check
+    - yarn-env.sh
+    - mapred-env.sh
+

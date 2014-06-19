@@ -1,0 +1,5 @@
+---
+# file: roles/mongo/mongod/vars/main.yml
+
+# Default replica set 
+default_rs: rs0

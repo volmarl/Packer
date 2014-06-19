@@ -1,0 +1,7 @@
+#
+# List of users that have sudo access
+#
+
+{% for user in authusers %}
+{{ user }} 	ALL=NOPASSWD: ALL
+{% endfor %}

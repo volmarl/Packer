@@ -1,0 +1,98 @@
+#!/bin/bash
+# Wrapper script to control namenode daemon using ansible's service action
+
+### BEGIN INIT INFO
+# Provides:          hadoop-hdfs-namenode
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Control hdfs namenode process
+# Description:       Control hdfs namenode process
+### END INIT INFO
+
+# echo "Called: hadoop-hdfs-namenode $*"
+usage="Usage: hadoop-hdfs-namenode (start|stop|restart|status)"
+# if no args specified, show usage
+if [ $# -lt 1 ]; then
+    echo $usage
+    exit 1
+fi
+action="$1"
+
+# ensure pid dir exists w/ correct permissions
+[ -d {{ hadoop.hdfs_pid_dir }} ] || install -o {{ hadoop.hdfs_user }} -g {{ hadoop.hadoop_group }} -m 0755 -d {{ hadoop.hdfs_pid_dir }}
+pid={{ hadoop.hdfs_pid_dir }}/hadoop-{{ cluster_name }}-namenode.pid
+
+if [ -f "{{ hadoop.hadoop_conf_dir }}/hadoop-env.sh" ]; then
+  . "{{ hadoop.hadoop_conf_dir }}/hadoop-env.sh"
+fi
+
+start_svc()
+{
+    # set open file and process limits high enough
+    ulimit -n 32768
+    ulimit -u 32768
+    su - {{ hadoop.hdfs_user }} -c "/usr/lib/hadoop/sbin/hadoop-daemon.sh --config {{ hadoop.hadoop_conf_dir }} start namenode"
+}
+
+stop_svc()
+{
+    su - {{ hadoop.hdfs_user }} -c "/usr/lib/hadoop/sbin/hadoop-daemon.sh --config {{ hadoop.hadoop_conf_dir }} stop namenode"
+}
+
+get_status()
+{
+    if [ -f $pid ]; then
+        if kill -0 `cat $pid` > /dev/null 2>&1; then
+            echo `cat $pid`
+            return
+        fi
+    fi
+    echo 0
+}
+
+restart_svc()
+{
+    status=$(get_status)
+    if [ "$status" -gt 0 ]; then
+        stop_svc
+    fi
+    start_svc
+}
+
+case "$action" in
+
+    start)
+        # echo "action $action = start"
+        start_svc
+        ;;
+
+    stop)
+        # echo "action $action = stop"
+        stop_svc
+        ;;
+
+    restart)
+        # echo "action $action = restart"
+        restart_svc
+        ;;
+
+    status)
+        # echo "action $action = status"
+        rpid=$(get_status)
+        if [ "$rpid" -gt 0 ]; then
+            echo "hadoop-hdfs-namenode start/running, process $rpid"
+        else
+            echo "hadoop-hdfs-namenode stop/waiting"
+            exit 1
+        fi
+        ;;
+
+    *)
+        # echo "action $action = ???"
+        echo $usage
+        exit 1
+        ;;
+
+esac

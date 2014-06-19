@@ -1,0 +1,2 @@
+my_zone: 'America/Los_Angeles'
+server_ycsb_pubkey: "{{ hostvars[groups['ycsb-server'][0]]['ycsb_pubkey'].stdout }}"

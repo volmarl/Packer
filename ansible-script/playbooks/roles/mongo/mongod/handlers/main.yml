@@ -1,0 +1,16 @@
+---
+# file: roles/mongo/mongod/handlers/main.yml
+  
+# Race condition requires a pause here to wait for services to start up
+- name: Waiting for MongoDB database service (mongod) to start
+  wait_for: port={{ mongo.mongod_port }} delay="10"
+
+# With the primary MongoD node, create the initial replica set
+- name: Initialize MongoD Replica Set
+  shell: mongo --eval "printjson(rs.initiate())"
+  when: hostvars[inventory_hostname]['node_type'] == 'first'
+
+# With primary MongoD node, add secondary nodes member-->last to replica set
+- name: Add SECONDARY MongoD members to replica set on PRIMARY node
+  shell: /usr/bin/mongo --port "{{ mongo.mongod_port }}" /tmp/repset_init.js 
+  when: hostvars[inventory_hostname]['node_type'] == 'first'

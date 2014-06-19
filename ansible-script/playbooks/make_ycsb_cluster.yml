@@ -1,0 +1,33 @@
+# file: servers.yml
+
+- hosts: all
+  sudo: no
+  gather_facts: yes
+  roles:
+    - common/pre
+
+- hosts: ycsb-server
+  tasks:
+  - name: Create SSH keygen if needed
+    shell: echo -e "y\n" | ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
+    ignore_errors: yes
+
+  - name: Remember pub key
+    shell: cat ~/.ssh/id_rsa.pub
+    register: ycsb_pubkey
+
+  - name: Remember private key
+    shell: cat ~/.ssh/id_rsa
+    register: ycsb_private_key
+
+  - name: Add YCSB clients to known_hosts
+    shell: ssh-keyscan -H {{ hostvars[item]['ansible_eth1']['ipv4']['address'] }} >> ~/.ssh/known_hosts
+    with_items: groups['ycsb-all']
+
+- hosts: ycsb-all
+  roles:
+    - ycsb/common
+
+- hosts: ycsb-server
+  roles:
+    - ycsb/server

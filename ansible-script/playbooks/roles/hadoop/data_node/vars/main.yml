@@ -1,0 +1,2 @@
+# Services to install/start on all datanodes
+hadoop_datanode_svcs: [ "hadoop-hdfs-datanode", "hadoop-yarn-nodemanager" ]

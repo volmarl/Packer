@@ -1,0 +1,26 @@
+---
+# The playbook for qjournal tasks
+- name: Create hdfs NameNode directory
+  file: path={{ hadoop.dfs_name_dir }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+
+- name: Create hdfs SecondaryNameNode directory
+  file: path={{ hadoop.dfs_checkpoint_dir }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+
+- name: Run base hadoop config generation
+  include: ../../common/tasks/core_config.yml
+
+- name: Create hdfs journal directory
+  file: path={{ hadoop.dfs_journal_dir }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+
+- name: Create journalnode init scripts
+  template: src={{ item }}.j2 dest=/etc/init.d/{{ item }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} mode=0755
+  with_items: qjournal_svcs
+
+- name: Set runlevels to restart on boot for journalnode init scripts
+  shell: update-rc.d {{ item }} defaults 93 7
+  with_items: qjournal_svcs
+
+- name: Start hadoop journalnode services
+  service: name={{ item }} state=restarted
+  with_items: qjournal_svcs
+

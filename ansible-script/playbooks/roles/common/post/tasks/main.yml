@@ -1,0 +1,6 @@
+# Post Converging Tasks
+---
+# file: roles/common/posttasks/main.yml
+  
+- name: Update motd
+  template: src="motd.j2.template" dest="/etc/motd" backup=yes owner=root group=root force=yes

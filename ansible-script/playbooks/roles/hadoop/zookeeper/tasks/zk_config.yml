@@ -1,0 +1,24 @@
+---
+# The zookeeper config tasks
+- name: Check if zookeeper config is a link
+  stat: path={{ hadoop.zookeeper_conf_dir }}
+  register: zconfstat
+
+- name: Remove old zookeeper config link
+  file: path={{ hadoop.zookeeper_conf_dir }} state=absent
+  when: zconfstat.stat.islnk
+
+- name: Create zookeeper config, data, log and pid directories
+  file: path={{ item }} owner={{ hadoop.zookeeper_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+  with_items:
+    - "{{ hadoop.zookeeper_conf_dir }}"
+
+- name: Copy the zookeeper configuration files
+  template: src={{ item }}.j2 dest={{ hadoop.zookeeper_conf_dir }}/{{ item }} owner={{ hadoop.zookeeper_user }} group={{ hadoop.hadoop_group }} mode=0644
+  with_items:
+    - configuration.xsl
+    - log4j.properties
+    - zoo.cfg
+    - zookeeper-env.sh
+
+

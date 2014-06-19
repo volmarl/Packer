@@ -1,0 +1,31 @@
+---
+# The playbook for hadoop first namenode specific tasks
+- name: Format the namenode
+  shell: creates=/usr/lib/hadoop/namenode.formatted su {{ hadoop.hdfs_user }} -c "hdfs namenode -format -force" && touch /usr/lib/hadoop/namenode.formatted
+
+- name: Init sharing from the first namenode
+  shell: creates=/usr/lib/hadoop/namenode.sharing su {{ hadoop.hdfs_user }} -c "hdfs namenode -initializeSharedEdits -force" && touch /usr/lib/hadoop/namenode.sharing
+  when: hdfs_ha
+
+- name: Set runlevels to restart on boot for nn1 init scripts
+  shell: update-rc.d {{ item }} defaults 92 8
+  with_items: hadoop_nn1_svcs
+
+- name: Start hadoop core namenode services
+  service: name={{ item }} state=restarted
+  with_items: hadoop_nn1_svcs
+
+- name: Format zkfc on nn1
+  shell: creates=/usr/lib/hadoop/zkfc.formatted su {{ hadoop.hdfs_user }} -c "hdfs zkfc -formatZK" && touch /usr/lib/hadoop/zkfc.formatted
+  when: hdfs_ha
+
+# Don't set state when auto failover enabled
+#- name: Check nn1 service state
+#  shell: su {{ hadoop.hdfs_user }} -c "hdfs haadmin -getServiceState nn1"
+#  register: nn1_service_state
+#  when: hdfs_ha
+#
+#- name: Make nn1 service state active
+#  shell: su {{ hadoop.hdfs_user }} -c "hdfs haadmin -transitionToActive nn1"
+#  when: hdfs_ha and nn1_service_state.stdout != "active"
+

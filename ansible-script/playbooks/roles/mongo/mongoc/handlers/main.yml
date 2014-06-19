@@ -1,0 +1,21 @@
+---
+# file: roles/mongo/mongoc/handlers/main.yml
+
+# Start the MongoC service 
+- name: Start MongoDB configuration (mongoc) service
+  service: name=mongoc state=started
+
+# Race condition requires a pause here to wait for services to start up
+- name: Waiting for MongoDB configuration server (mongoc) to start
+  wait_for: port=7777 delay=10"
+
+# Attempt to add a user using a script rather than ansible's modules
+- name: Add admin user to MongoDB admin database
+  shell: mongo --port {{ mongo.mongoc_port }} admin /tmp/adduser.j2
+  
+# Requires the pymongo Python package on the remote host, version 2.4.2+
+#- name: Add admin user to MongoDB admin database
+#  mongodb_user: database=admin name=admin password={{ mongo_admin_pass }} login_port={{ mongo.mongoc_port }}
+#  #mongodb_user: database=admin name=admin password={{ mongo_admin_pass }}
+#  ignore_errors: yes
+

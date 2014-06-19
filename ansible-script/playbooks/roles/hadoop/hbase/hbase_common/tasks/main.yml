@@ -1,0 +1,38 @@
+---
+# The playbook for common hbase tasks
+# TODO - remove if common install of all works as needed
+#- name: Install hbase common packages
+#  #apt: pkg={{ item }} force=yes
+#  apt: pkg={{ item }}
+#  with_items: hbase_common_pkgs
+
+- name: Check if hbase config is a link
+  stat: path={{ hadoop.hbase_conf_dir }}
+  register: hbconfstat
+
+- name: Remove old hbase config link
+  file: path={{ hadoop.hbase_conf_dir }} state=absent
+  when: hbconfstat.stat.islnk
+
+- name: Create hbase config, log and pid directories
+  file: path={{ item }} owner={{ hadoop.hbase_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+  with_items:
+    - "{{ hadoop.hbase_conf_dir }}"
+    - "{{ hadoop.hbase_log_dir }}"
+    - "{{ hadoop.hbase_pid_dir }}"
+
+- name: Copy the hbase configuration files
+  template: src={{ item }}.j2 dest={{ hadoop.hbase_conf_dir }}/{{ item }} owner={{ hadoop.hbase_user }} group={{ hadoop.hadoop_group }} mode=0644
+  with_items:
+    - hbase-site.xml
+    - hbase-policy.xml
+    - log4j.properties
+    - regionservers
+    - hadoop-metrics.properties
+    - hbase-env.sh
+
+- name: Run base zookeeper config generation
+  include: ../../../zookeeper/tasks/zk_config.yml
+  when: hdfs_ha
+
+

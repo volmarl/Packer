@@ -1,0 +1,25 @@
+---
+
+#- name: Create Temp Directory
+#  shell: mkdir -p {{staging_dir}}
+
+#- name: Install cURL
+#  apt: name=curl
+
+#- name: Download Server
+#  shell: curl -s -o {{staging_dir}}/server.tgz "{{ installer_endpoints.server }}"
+
+#- name: Extract files
+#  shell: tar -xvf {{staging_dir}}/server.tgz --directory {{staging_dir}}
+
+#- name: Install server & tools
+#  shell: dpkg -i {{staging_dir}}/aerospike*/*.deb
+#  ignore-errors: yes
+
+- name: Configure from template
+  template: src=aerospike.conf.j2 dest=/etc/aerospike/aerospike.conf
+  notify:
+     - Restart Aerospike
+ 
+#- name: Start service
+#  service: name=aerospike state=started enabled=yes

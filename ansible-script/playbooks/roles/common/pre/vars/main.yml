@@ -1,0 +1,5 @@
+---
+# file: roles/common/pre/vars/main.yml
+install_pkgs: [ "strace", "tcpflow", "tcpdump", "vim", "sudo", "python-pip", "python-dev"]
+authusers: [ "root" , "ansible" ]
+

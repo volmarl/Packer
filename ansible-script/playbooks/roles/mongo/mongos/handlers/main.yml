@@ -1,0 +1,7 @@
+---
+# file: roles/mongo/mongos/handlers/main.yml
+
+# Start MongoS service
+- name: Start MongoDB (mongos) service on application servers
+  service: name=mongos state=started
+

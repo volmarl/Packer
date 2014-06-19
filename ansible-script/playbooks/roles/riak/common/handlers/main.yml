@@ -1,0 +1,15 @@
+---
+# file: roles/riak/common/handlers/main.yml
+
+# Restart Riak service on Riak node
+- name: restart riak
+  service: name=riak state=restarted
+
+# Wait for the HTTP port on Riak node to respond
+- name: wait for http
+  wait_for: port={{ riak.http_port }}
+
+# Wait for key/value service to come online
+- name: wait for kv
+  riak: wait_for_service=kv
+

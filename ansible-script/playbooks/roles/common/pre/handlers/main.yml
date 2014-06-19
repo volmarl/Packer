@@ -1,0 +1,5 @@
+---
+# file: roles/common/pre/handlers/main.yml
+
+- name: Restarting ssh service
+  service: name=ssh state=restarted

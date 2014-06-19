@@ -1,0 +1,34 @@
+---
+# The playbook for zookeeper tasks
+# TODO - remove if common install of all works as needed
+#- name: Install zookeeper packages
+#  apt: pkg={{ item }}
+#  with_items: zookeeper_pkgs
+
+- name: Create zookeeper data, log and pid directories
+  file: path={{ item }} owner={{ hadoop.zookeeper_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+  with_items:
+    - "{{ hadoop.zookeeper_data_dir }}"
+    - "{{ hadoop.zookeeper_log_dir }}"
+    - "{{ hadoop.zookeeper_pid_dir }}"
+
+- name: Generate base zookeeper config
+  include: zk_config.yml
+
+- name: Generate the myid file to the data directory
+  template: src={{ item }}.j2 dest={{ hadoop.zookeeper_data_dir }}/{{ item }} owner={{ hadoop.zookeeper_user }} group={{ hadoop.hadoop_group }} mode=0644
+  with_items:
+    - myid
+
+- name: Create zookeeper init scripts
+  template: src={{ item }}.j2 dest=/etc/init.d/{{ item }} owner={{ hadoop.zookeeper_user }} group={{ hadoop.hadoop_group }} mode=0755
+  with_items: zookeeper_svcs
+
+- name: Set runlevels to restart on boot for zookeeper init scripts
+  shell: update-rc.d {{ item }} defaults 92 8
+  with_items: zookeeper_svcs
+
+- name: Start hadoop zookeeper services
+  service: name={{ item }} state=restarted
+  with_items: zookeeper_svcs
+

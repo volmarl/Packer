@@ -1,0 +1,6 @@
+sleep(13000)
+{% set hosts = '' %}
+ {% for host in groups['mongod'] %}
+   rs.add("{{ hostvars[host]['ansible_eth1']['ipv4']['address'] }}:{{ mongo.mongod_port }}")
+   sleep(8000)
+ {% endfor %}

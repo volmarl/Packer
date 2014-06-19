@@ -1,0 +1,27 @@
+---
+# playbook for hbase master
+- name: Run base hadoop config generation
+  include: ../../../common/tasks/core_config.yml
+
+- name: Create hbase master init script
+  template: src={{ item }}.j2 dest=/etc/init.d/{{ item }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} mode=0755
+  with_items:
+    - hadoop-hbase-master
+
+- name: Create hbase hdfs app dir
+  shell: su {{ hadoop.hdfs_user }} -c "/usr/lib/hadoop/bin/hadoop fs -mkdir -p /apps/hbase"
+
+- name: Chown hbase hdfs app dir
+  shell: su {{ hadoop.hdfs_user }} -c "/usr/lib/hadoop/bin/hadoop fs -chown -R {{ hadoop.hbase_user }}:{{ hadoop.hadoop_group }} /apps/hbase"
+
+- name: Set runlevels to restart on boot for hbase_master init scripts
+  shell: update-rc.d {{ item }} defaults 94 6
+  with_items:
+    - hadoop-hbase-master
+
+- name: Start hbase master
+  service: name={{ item }} state=restarted
+  with_items:
+    - hadoop-hbase-master
+
+

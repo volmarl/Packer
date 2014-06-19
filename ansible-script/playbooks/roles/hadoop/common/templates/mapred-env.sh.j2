@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+#/*
+# * Licensed to the Apache Software Foundation (ASF) under one
+# * or more contributor license agreements.  See the NOTICE file
+# * distributed with this work for additional information
+# * regarding copyright ownership.  The ASF licenses this file
+# * to you under the Apache License, Version 2.0 (the
+# * "License"); you may not use this file except in compliance
+# * with the License.  You may obtain a copy of the License at
+# *
+# *     http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# */
+
+# Extract JAVA_HOME for apt-based distros
+j1=`ls -l /etc/alternatives/java`
+j2=${j1##* }
+export JAVA_HOME=${j2%%/bin/java}
+export HADOOP_MAPRED_HOME=/usr/lib/hadoop-mapreduce
+export HADOOP_MAPRED_LOG_DIR={{ hadoop.mapred_log_dir }}
+export HADOOP_MAPRED_PID_DIR={{ hadoop.mapred_pid_dir }}
+export HADOOP_LIBEXEC_DIR=/usr/lib/hadoop/libexec
+
+# User for MAPRED daemons
+export HADOOP_MAPRED_USER={{ hadoop.mapred_user }}
+#
+# A string representing this instance of yarn. $USER by default.
+export HADOOP_MAPRED_IDENT_STRING={{ hadoop.mapred_user }}
+
+# resolve links - $0 may be a softlink
+export HADOOP_CONF_DIR={{ hadoop.hadoop_conf_dir }}
+
+if [ "$JAVA_HOME" = "" ]; then
+  echo "Error: JAVA_HOME is not set."
+  exit 1
+fi
+
+JAVA=$JAVA_HOME/bin/java
+JAVA_HEAP_MAX=-Xmx1000m
+
+# For setting MAPRED specific HEAP sizes please use this
+# Parameter and set appropriately
+MAPRED_HEAPSIZE=1024
+
+# check envvars which might override default args
+if [ "$MAPRED_HEAPSIZE" != "" ]; then
+  JAVA_HEAP_MAX="-Xmx""$MAPRED_HEAPSIZE""m"
+fi

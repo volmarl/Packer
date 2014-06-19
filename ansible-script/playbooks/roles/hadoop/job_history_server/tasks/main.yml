@@ -1,0 +1,33 @@
+---
+# The playbook for hadoop job history server tasks
+- name: Create JobHistory server directories on HDFS
+  shell: su {{ hadoop.hdfs_user }} -c "{{ item }}"
+  with_items:
+    - hdfs dfs -mkdir -p /mr-history/tmp
+    - hdfs dfs -chmod -R 1777 /mr-history/tmp
+    - hdfs dfs -mkdir -p /mr-history/done
+    - hdfs dfs -chmod -R 1777 /mr-history/done
+    - hdfs dfs -chown -R {{ hadoop.mapred_user }}:{{ hadoop.hadoop_group }} /mr-history
+    - hdfs dfs -mkdir -p /app-logs
+    - hdfs dfs -chmod -R 1777 /app-logs
+    - hdfs dfs -chown {{ hadoop.yarn_user }}:{{ hadoop.hadoop_group }} /app-logs
+
+- name: Create JobHistory init script
+  template: src={{ item }}.j2 dest=/etc/init.d/{{ item }} owner={{ hadoop.mapred_user }} group={{ hadoop.hadoop_group }} mode=0755
+  with_items: hadoop_jobhist_svcs
+
+- name: Set runlevels to restart on boot for JobHistory init scripts
+  shell: update-rc.d {{ item }} defaults 94 6
+  with_items: hadoop_jobhist_svcs
+
+- name: Start JobHistory service
+  service: name={{ item }} state=restarted
+  with_items: hadoop_jobhist_svcs
+
+#- name: Check for three running java processes
+#  shell: ps -ef | grep [j]ava | wc -l
+#  register: proc_count
+#
+#- name: Fail if not enough running java processes
+#  fail: Expected at least {{ hadoop_master_primary_svcs|length + hadoop_jobhist_svcs|length }} java processes running, found {{ proc_count.stdout }}
+#  when: proc_count.stdout|int < {{ hadoop_master_primary_svcs|length + hadoop_jobhist_svcs|length }}

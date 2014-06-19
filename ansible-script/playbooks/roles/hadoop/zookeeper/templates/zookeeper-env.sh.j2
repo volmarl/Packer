@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+j1=`ls -l /etc/alternatives/java`
+j2=${j1##* }
+export JAVA_HOME=${j2%%/bin/java}
+export ZOO_LOG_DIR={{ hadoop.zookeeper_log_dir }}
+export ZOOPIDFILE={{ hadoop.zookeeper_pid_dir }}/zookeeper_server.pid
+export SERVER_JVMFLAGS=

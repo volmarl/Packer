@@ -1,0 +1,28 @@
+---
+# file: roles/mongo/common/tasks/main.yml
+
+# get the apt key to use for the MongoDB package from 10Gen
+- name: Update apt-key for MongoDB from 10Gen
+  apt_key: id=7F0CEB10 url=http://docs.mongodb.org/10gen-gpg-key.asc state=present
+
+# Update the sources list so that we can use apt to install the MongoDB package
+- name: Update MongoDB source packages in Debian
+  copy: src=mongodb.list dest=/etc/apt/sources.list.d/mongodb.list backup=yes force=yes
+
+# Update our apt cache to reflect changes committed in sources list update
+- name: Update apt repository for MongoDB package
+  apt: update_cache=yes
+
+# Install the MongoDB package on system and stop the service
+- name: Install MongoDB package
+  apt: pkg=mongodb-10gen
+  notify:
+    - Stop (Default) MongoDB service installed from package mongodb-10gen from starting
+
+# Install the Python driver for MongoDB
+- name: Install MongoDB python package
+  apt: pkg=python-pymongo
+
+# Create the base default directory where the db resources will be installed too
+- name: Create data directory to house MongoDB configuration and data
+  file: path={{ mongo.mongodb_datadir_prefix }} state=directory owner=mongodb group=mongodb

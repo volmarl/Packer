@@ -1,0 +1,14 @@
+---
+# file: servers.yml
+
+- hosts: all
+  sudo: no
+  gather_facts: yes
+  roles:
+    - common/pre
+    - riak/common
+
+- hosts: riaknode
+  roles:
+    - riak/riaknode
+    - common/post

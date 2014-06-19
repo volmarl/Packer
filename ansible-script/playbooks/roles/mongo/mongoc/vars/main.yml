@@ -1,0 +1,4 @@
+---
+# file: roles/mongo/mongoc/vars/main.yml
+
+mongo_admin_pass: abcd1234

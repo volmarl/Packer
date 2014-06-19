@@ -1,0 +1,63 @@
+---
+# The playbook for common hadoop tasks
+- name: Install hadoop prerequisite packages
+  apt: pkg={{ item }}
+  with_items: hadoop_prereq_pkgs
+
+- name: Add Hortonworks hdp apt repo list
+  get_url: url=http://public-repo-1.hortonworks.com/HDP/ubuntu12/2.x/hdp.list dest=/etc/apt/sources.list.d/hdp.list
+
+- name: Add Hortonworks apt repo key
+  apt_key: url=http://pgp.mit.edu/pks/lookup?op=get&search=0x07513CAD id=0x07513CAD state=present
+
+- name: Update apt repositories
+  apt: update_cache=yes
+
+- name: Install hadoop common packages
+  #apt: pkg={{ item }} force=yes
+  apt: pkg={{ item }}
+  with_items: hadoop_common_pkgs
+
+- name: Make the Snappy libraries available to Hadoop
+  file: src=/usr/lib64/libsnappy.so state=link path=/usr/lib/hadoop/lib/native/libsnappy.so
+
+- name: Check if hadoop config is a link
+  stat: path={{ hadoop.hadoop_conf_dir }}
+  register: hconfstat
+
+- name: Remove old hadoop config link
+  file: path={{ hadoop.hadoop_conf_dir }} state=absent
+  when: hconfstat.stat.islnk
+
+- name: Create hadoop config directory
+  file: path={{ hadoop.hadoop_conf_dir }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+
+- name: Create hdfs log and pid directories
+  file: path={{ item }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+  with_items:
+    - "{{ hadoop.hdfs_log_dir }}"
+    - "{{ hadoop.hdfs_pid_dir }}"
+
+- name: Create yarn log and pid directories
+  file: path={{ item }} owner={{ hadoop.yarn_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+  with_items:
+    - "{{ hadoop.yarn_log_dir }}"
+    - "{{ hadoop.yarn_pid_dir }}"
+
+- name: Create mapred log and pid directories
+  file: path={{ item }} owner={{ hadoop.mapred_user }} group={{ hadoop.hadoop_group }} state=directory mode=0755
+  with_items:
+    - "{{ hadoop.mapred_log_dir }}"
+    - "{{ hadoop.mapred_pid_dir }}"
+
+- name: Change permissions on the container-executor
+  shell: "{{ item }}"
+  with_items:
+    - chown -R root:{{ hadoop.hadoop_group }} /usr/lib/hadoop-yarn/bin/container-executor
+    - chmod -R 6050 /usr/lib/hadoop-yarn/bin/container-executor
+
+- name: Copy fixed-up JobHistory deamon script
+  template: src={{ item }}.j2 dest=/usr/lib/hadoop-mapreduce/sbin//{{ item }} mode=0755
+  with_items:
+    - mr-jobhistory-daemon.sh
+

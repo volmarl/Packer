@@ -1,0 +1,2 @@
+# services to install/start on hadoop_master_primary
+hadoop_jobhist_svcs: [ "hadoop-mapred-jobhistory" ]

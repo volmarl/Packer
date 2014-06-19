@@ -1,0 +1,9 @@
+installer_endpoints: { "server": "http://www.aerospike.com/community_downloads/3.3.5/aerospike-server-community-3.3.5-ubuntu12.04.tgz" }
+staging_dir: "/tmp/staging"
+
+internal_ip: "{{ hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address'] }}"
+external_ip: "{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] }}"
+
+# grab next hostvars key after 'inventory_hostname' modulo length, creates ring topology
+mesh_peer_hostname: "{{ hostvars.keys()[(hostvars.keys().index(inventory_hostname) + 1) % (hostvars.keys()|length)] }}"
+mesh_peer_ip: "{{ hostvars[mesh_peer_hostname]['ansible_eth1']['ipv4']['address'] }}"

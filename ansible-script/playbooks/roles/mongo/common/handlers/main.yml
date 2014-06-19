@@ -1,0 +1,6 @@
+---
+# file: roles/mongo/common/handlers/main.yml
+
+# Handler defined in /mongo/common/tasks/main.yml that will be called to stop the MongoDB service
+- name: Stop (Default) MongoDB service installed from package mongodb-10gen from starting
+  service: name=mongodb state=stopped

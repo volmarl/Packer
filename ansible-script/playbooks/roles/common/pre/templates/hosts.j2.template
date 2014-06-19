@@ -1,0 +1,12 @@
+127.0.0.1	localhost
+#127.0.1.1	{{ hostvars[inventory_hostname]['host_name'] }}
+
+# Set this option to specify hosts in cluster
+
+{%- set hosts = '\n' -%}
+  {%- for host in groups['servers'] -%}
+    {%- set hosts = hosts + '' ~ hostvars[host]['ansible_eth1']['ipv4']['address'] ~ '\t\t' ~  hostvars[host]['host_name'] ~ '\n' -%}
+    {%- if loop.last -%}
+{{ hosts }}
+   {%- endif -%}
+ {%- endfor -%}

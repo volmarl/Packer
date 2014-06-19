@@ -1,0 +1,7 @@
+---
+# file: roles/riak/common/vars/main.yml
+
+last_node: "{{ hostvars[groups['last'][0]] }}"
+primary_node: "{{ hostvars[groups['last'][0]]['riak_outputs']['node_name'] }}"
+ip_addr: "{{ hostvars[inventory_hostname]['ansible_' + riak.iface]['ipv4']['address'] }}"
+riakcs: False

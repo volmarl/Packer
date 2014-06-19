@@ -1,0 +1,66 @@
+---
+# file: servers.yml
+- hosts: all
+  sudo: no
+  gather_facts: yes
+  # TODO -- remove remote_user spec here ???
+  remote_user: root
+  roles:
+    - common/pre
+    - hadoop/common
+
+- hosts: datanode
+  sudo: yes
+  remote_user: ansible
+  roles:
+    - hadoop/data_node
+    - common/post
+
+- hosts: zkqjserver
+  sudo: yes
+  remote_user: ansible
+  roles:
+    - { role: hadoop/zookeeper, when: hdfs_ha }
+    - { role: hadoop/qjournal, when: hdfs_ha }
+    - common/post
+
+- hosts: namenode1
+  sudo: yes
+  remote_user: ansible
+  roles:
+    - hadoop/name_node_core
+    - common/post
+
+- hosts: namenode2
+  sudo: yes
+  remote_user: ansible
+  roles:
+    - { role: hadoop/name_node_core, when: hdfs_ha }
+    - common/post
+
+- hosts: jobhistoryserver
+  sudo: yes
+  remote_user: ansible
+  roles:
+    - hadoop/job_history_server
+
+
+# TODO -- add logic in templates for non-ha zookeeper host expansion
+- hosts: hbasemaster
+  sudo: yes
+  remote_user: ansible
+  roles:
+    - { role: hadoop/zookeeper, when: not hdfs_ha }
+    - hadoop/hbase/hbase_common
+    - hadoop/hbase/hbase_master
+    - common/post
+
+- hosts: hbaseregionserver
+  sudo: yes
+  remote_user: ansible
+  roles:
+    - hadoop/hbase/hbase_common
+    - hadoop/hbase/hbase_regionserver
+
+
+

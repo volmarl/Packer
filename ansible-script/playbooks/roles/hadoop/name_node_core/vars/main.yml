@@ -1,0 +1,4 @@
+# services to install/start on hadoop namenode
+hadoop_nn1_svcs: [ "hadoop-hdfs-namenode", "hadoop-yarn-resourcemanager" ]
+hadoop_nn2_svcs: [ "hadoop-hdfs-namenode" ]
+hadoop_zkfc_svcs: [ "hadoop-hdfs-zkfc" ]

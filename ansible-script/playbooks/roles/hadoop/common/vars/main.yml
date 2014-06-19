@@ -1,0 +1,4 @@
+# recommended prerequisite packages for HDP installation
+hadoop_prereq_pkgs: [ "unzip", "curl", "wget", "openjdk-7-jdk" ]
+#hadoop_common_pkgs: [ "hadoop", "hadoop-hdfs", "libhdfs0", "libhdfs0-dev", "hadoop-yarn", "hadoop-mapreduce", "hadoop-client", "openssl", "libsnappy1", "libsnappy-dev", "liblzo2-2", "liblzo2-dev", "hadoop-lzo" ]
+hadoop_common_pkgs: [ "hadoop", "hadoop-hdfs", "libhdfs0", "libhdfs0-dev", "hadoop-yarn", "hadoop-mapreduce", "hadoop-client", "openssl", "libsnappy1", "libsnappy-dev", "liblzo2-2", "liblzo2-dev", "hadoop-lzo", "zookeeper", "hbase" ]

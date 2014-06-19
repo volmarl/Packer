@@ -1,0 +1,83 @@
+---
+# file: group_vars/all
+
+cluster_name: cluster
+
+riak:
+  mountpoint: /
+  partition: /dev/mapper/VolGroup-lv_root
+  physical_disk: sda
+  version: 1.3.1
+  scheduler: noop
+  backend: bitcask
+  ring_size: 64
+  log_rotate: 4
+  iface: eth1
+  handoff_port: 8099
+  http_port: 8098
+  pb_port: 8087
+
+mongo:
+  mongos_chunk_size: 64
+  mongos_port: 8888
+  mongoc_port: 7777
+  mongod_port: 27017
+  iface: eth1
+  mongodb_datadir_prefix: /data/
+
+cassandra:
+  iface: eth1
+
+hadoop:
+    iface: eth1
+    data_raw_disks: True
+    # user, group and directory definitions for HDP install/config
+    hadoop_group: hadoop
+    hdfs_user: hdfs
+    dfs_name_dir: /hadoop/hdfs/namedir
+    dfs_journal_dir: /hadoop/hdfs/journaldir
+    dfs_data_dir_prefix: /hadoop/disk
+    dfs_data_dir_suffix: hdfs/data
+    dfs_checkpoint_dir: /hadoop/hdfs/chkptdir
+    dfs_blocksize: 134217728
+    dfs_replication: 3
+    hdfs_log_dir: /var/log/hadoop/hdfs
+    hdfs_pid_dir: /var/run/hadoop/hdfs
+    hadoop_conf_dir: /etc/hadoop/conf
+    yarn_user: yarn
+    yarn_local_dir_suffix: yarn/local
+    yarn_local_log_suffix: yarn/log
+    yarn_log_dir: /var/log/hadoop/yarn
+    yarn_pid_dir: /var/run/hadoop/yarn
+    mapred_user: mapred
+    mapred_log_dir: /var/log/hadoop/mapred
+    mapred_pid_dir: /var/run/hadoop/mapred
+    hbase_user: hbase
+    hbase_conf_dir: /etc/hbase/conf
+    hbase_log_dir: /var/log/hbase
+    hbase_pid_dir: /var/run/hbase
+    zookeeper_user: zookeeper
+    zookeeper_data_dir: /hadoop/zookeeper/data
+    zookeeper_conf_dir: /etc/zookeeper/conf
+    zookeeper_log_dir: /var/log/zookeeper
+    zookeeper_pid_dir: /var/run/zookeeper
+    pig_user: pig
+    pig_conf_dir: /etc/hadoop/pig/conf
+    pig_log_dir: /var/hadoop/log/pig
+    pig_pid_dir: /var/hadoop/run/pig
+    oozie_user: oozie
+    oozie_conf_dir: /etc/hadoop/oozie/conf
+    oozie_data: /var/db/oozie
+    oozie_log_dir: /var/log/oozie
+    oozie_pid_dir: /var/run/oozie
+    oozie_tmp_dir: /var/tmp/oozie
+    hive_user: hive
+    hive_conf_dir: /etc/hive/conf
+    hive_log_dir: /var/log/hive
+    hive_pid_dir: /var/run/hive
+    webhcat_user: hcat
+    webhcat_conf_dir: /etc/hcatalog/conf/webhcat
+    webhcat_log_dir: var/log/webhcat
+    webhcat_pid_dir: /var/run/webhcat
+    sqoop_conf_dir: /etc/sqoop/conf
+

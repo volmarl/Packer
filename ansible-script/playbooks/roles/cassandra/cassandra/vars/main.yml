@@ -1,0 +1,4 @@
+install_pkgs: [ "openjdk-7-jre-headless", "libjna-java", "libev4", "libev-dev" ]
+last_node: "{{ hostvars[groups['last'][0]]['ansible_' + cassandra.iface]['ipv4']['address'] }}"
+first_node: "{{ hostvars[groups['first'][0]]['ansible_' + cassandra.iface]['ipv4']['address'] }}"
+listen_addr: "{{ hostvars[inventory_hostname]['ansible_' + cassandra.iface]['ipv4']['address'] }}"

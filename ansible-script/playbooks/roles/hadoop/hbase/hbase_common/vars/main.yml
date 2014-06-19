@@ -1,0 +1,2 @@
+# recommended prerequisite packages hbase for  installation
+hbase_common_pkgs: [ hbase ]

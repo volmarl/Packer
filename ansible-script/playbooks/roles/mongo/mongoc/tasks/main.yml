@@ -1,0 +1,29 @@
+---
+# file: roles/mongo/mongoc/handlers/main.yml
+
+# Create path to store configuration data on MongoC server
+- name: Create data directory configdb for MongoDB configuration server
+  file: path={{ mongo.mongodb_datadir_prefix }}/configdb state=directory owner=mongodb group=mongodb
+
+# Copy Jinja2 startup init script for MongoC
+- name: Create the MongoC startup file
+  template: src=mongoc.j2 dest=/etc/init.d/mongoc mode=0655
+
+# Copy Jinja2 configuration script for MongoC
+- name: Create the MongoC configuration server file
+  template: src=mongoc.conf.j2 dest=/etc/mongoc.conf mode=0644
+
+# Copy Jinja2 add user script which will add a default temp admin account to DB
+- name: Copy add user script
+  template: src=adduser.j2 dest=/tmp mode=0777
+
+# http://docs.mongodb.org/manual/tutorial/generate-key-file/
+- name: Copy the keyfile for authentication
+  copy: src=secret dest={{ mongo.mongodb_datadir_prefix }}/secret owner=mongodb group=mongodb mode=0400
+
+# Signaling handlers to start MongoC service and add user to db
+- name: Flush all handlers
+  shell: echo "Flushing all handlers"
+  notify:
+    - Start MongoDB configuration (mongoc) service
+    - Add admin user to MongoDB admin database

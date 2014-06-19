@@ -1,0 +1,20 @@
+---
+# file: roles/mongo/mongos/tasks/main.yml
+
+# http://docs.mongodb.org/manual/tutorial/generate-key-file/
+- name: Copy the keyfile for authentication between member servers
+  copy: src=secret dest={{ mongo.mongodb_datadir_prefix }}/secret owner=mongodb group=mongodb mode=0400
+
+# http://docs.mongodb.org/manual/reference/glossary/#term-control-script
+- name: Create the MongoDB application server startup file
+  template: src=mongos.j2 dest=/etc/init.d/mongos mode=0655
+  
+# http://docs.mongodb.org/manual/tutorial/install-mongodb-on-debian/
+- name: Copy the MongoDB application server configuration script
+  template: src=mongos.conf.j2 dest=/etc/mongos.conf mode=0644
+
+# Signaling handlers to start MongoS service and add user to db
+- name: Flush all handlers
+  shell: echo "Flushing all handlers"
+  notify:
+    - Start MongoDB (mongos) service on application servers

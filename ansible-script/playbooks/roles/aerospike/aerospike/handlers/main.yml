@@ -1,0 +1,4 @@
+---
+
+- name: Restart Aerospike
+  action: service name=aerospike state=restarted

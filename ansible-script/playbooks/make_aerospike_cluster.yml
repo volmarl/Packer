@@ -1,0 +1,11 @@
+# file: servers.yml
+
+#- hosts: all
+#  sudo: no
+#  gather_facts: yes
+#  roles:
+#    - common/pre
+
+- hosts: db-servers
+  roles:
+    - aerospike/aerospike

@@ -1,0 +1,24 @@
+---
+# The playbook for hadoop second namenode specific tasks
+- name: Init standby state on the second namenode
+  shell: creates=/usr/lib/hadoop/namenode.sharing su {{ hadoop.hdfs_user }} -c "hdfs namenode -bootstrapStandby -nonInteractive" && touch /usr/lib/hadoop/namenode.sharing
+  when: hdfs_ha
+
+- name: Set runlevels to restart on boot for nn2 init scripts
+  shell: update-rc.d {{ item }} defaults 92 8
+  with_items: hadoop_nn2_svcs
+
+- name: Start hadoop second namenode services
+  service: name={{ item }} state=restarted
+  with_items: hadoop_nn2_svcs
+
+# Don't set state when auto failover enabled
+#- name: Check nn2 service state
+#  shell: su {{ hadoop.hdfs_user }} -c "hdfs haadmin -getServiceState nn2"
+#  register: nn2_service_state
+#  when: hdfs_ha
+#
+#- name: Make nn2 service state standby
+#  shell: su {{ hadoop.hdfs_user }} -c "hdfs haadmin -transitionToStandby nn2"
+#  when: hdfs_ha and nn2_service_state.stdout != "standby"
+

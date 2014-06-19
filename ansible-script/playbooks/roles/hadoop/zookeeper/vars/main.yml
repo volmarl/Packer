@@ -1,0 +1,3 @@
+# services to install/start on hadoop namenode
+zookeeper_pkgs: [ "zookeeper" ]
+zookeeper_svcs: [ "hadoop-zookeeper-server" ]

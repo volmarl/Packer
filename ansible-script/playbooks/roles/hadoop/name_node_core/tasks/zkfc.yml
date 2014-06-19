@@ -1,0 +1,17 @@
+---
+# The playbook for hadoop automated failover specific tasks
+- name: Create zkfc init scripts
+  template: src={{ item }}.j2 dest=/etc/init.d/{{ item }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} mode=0755
+  with_items: hadoop_zkfc_svcs
+  when: hdfs_ha
+
+- name: Set runlevels to restart on boot for zkfc init scripts
+  shell: update-rc.d {{ item }} defaults 93 7
+  with_items: hadoop_zkfc_svcs
+  when: hdfs_ha
+
+- name: Start zkfc services
+  service: name={{ item }} state=started
+  with_items: hadoop_zkfc_svcs
+  when: hdfs_ha
+

@@ -1,0 +1,2 @@
+# services to install/start on hadoop quorum journal nodes
+qjournal_svcs: [ "hadoop-hdfs-journalnode" ]

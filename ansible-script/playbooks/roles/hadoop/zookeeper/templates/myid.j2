@@ -1,0 +1,13 @@
+{% if hdfs_ha -%}
+    {% for host in groups['zkqjserver'] -%}
+        {%- if ansible_hostname == hostvars[host]['ansible_hostname'] -%}
+            {{ loop.index }}
+        {%- endif -%}
+    {%- endfor %}
+{%- else -%}
+    {% for host in groups['hbasemaster'] -%}
+        {%- if ansible_hostname == hostvars[host]['ansible_hostname'] -%}
+            {{ loop.index }}
+        {%- endif -%}
+    {%- endfor %}
+{%- endif -%}

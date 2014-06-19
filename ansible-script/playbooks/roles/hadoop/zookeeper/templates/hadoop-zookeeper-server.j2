@@ -1,0 +1,21 @@
+#!/bin/bash
+# Wrapper script to control zookeeper daemon using ansible's service action
+
+### BEGIN INIT INFO
+# Provides:          hadoop-zookeeper-server
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Control zookeeper process
+# Description:       Control zookeeper process
+### END INIT INFO
+
+# echo "Called: hadoop-zookeeper-server $*"
+echo "Running: /usr/lib/zookeeper/bin/zkServer.sh $1 {{ hadoop.zookeeper_conf_dir }}/zoo.cfg"
+# ensure pid dir exists w/ correct permissions
+[ -d {{ hadoop.zookeeper_pid_dir }} ] || install -o {{ hadoop.zookeeper_user }} -g {{ hadoop.hadoop_group }} -m 0755 -d {{ hadoop.zookeeper_pid_dir }}
+# set open file and process limits high enough
+ulimit -n 32768
+ulimit -u 32768
+su {{ hadoop.zookeeper_user }} -s /bin/bash -c "/usr/lib/zookeeper/bin/zkServer.sh $1 {{ hadoop.zookeeper_conf_dir }}/zoo.cfg"

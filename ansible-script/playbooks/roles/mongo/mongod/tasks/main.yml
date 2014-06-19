@@ -1,0 +1,67 @@
+---
+# file: roles/mongo/mongod/tasks/main.yml
+
+# Disable NUMA on system http://docs.mongodb.org/manual/administration/production-notes/
+- name: Disabling NUMA
+  shell: echo 0 > /proc/sys/vm/zone_reclaim_mode
+
+# Set TCP keep alive on system to 300 seconds
+- name: Setting TCP KeepAlive timeouts for MongoDB 
+  sysctl: name="net.ipv4.tcp_keepalive_time" value=300 state=present reload=Yes 
+
+# Ensure we create a script run on every boot to ensure the readahead settings on the block devices are set correctly
+- name: Updating RC.LOCAL updating readahead settings for the block devices that store the database files
+  template: src=rc.local.j2 dest=/etc/rc.local
+
+# Iterate through devices and only get the primary xvda or hda device
+- name: Setting Local Block Device 
+  set_fact: mongo_blk_dev={{ item }}
+  with_items: ansible_devices.keys()
+  when: "'{{ item }}' in ['xvda', 'hda']"
+
+# Obtain the UUID of the block data device partition (usually xvda2)
+- name: Retrieving UUID of Local Block Device
+  shell: blkid | sed -n '/{{ mongo_blk_dev }}2/s/.*UUID=\"\([^\"]*\)\".*/\1/p'
+  register: mongo_blk_uuid
+
+# Set a variable that will contain the block UUID of the data partition
+- name: Setting Local Block Device UUID
+  set_fact: mongo_blk_uuid={{ mongo_blk_uuid.stdout }}
+
+# Set read ahead value on block device /dev/xxx
+- name: Setting readahead settings on block devices
+  shell: blockdev --setra 32 /dev/{{ mongo_blk_dev }}
+
+# Set mount options for data partition
+- name: Setting mount options for data partition
+  mount: fstype=ext3 name=/ src='UUID={{mongo_blk_uuid}}' opts=noatime passno=1 state=present
+
+# Create the DB location for MongoD
+- name: Create the data directory folder location for MongoDB
+  file: path={{ mongo.mongodb_datadir_prefix }}/db state=directory owner=mongodb group=mongodb
+
+# Copy Jinja2 startup init script for MongoD
+- name: Create the MongoDB startup file
+  template: src=mongod.j2 dest=/etc/init.d/mongodb mode=0655
+
+# Copy Jinja2 configuration script for MongoD
+- name: Create the MongoDB configuration file
+  template: src=mongod.conf.j2 dest=/etc/mongodb.conf mode=0644
+  
+# To do add command to generate the secret key http://docs.mongodb.org/manual/tutorial/generate-key-file/
+
+# http://docs.mongodb.org/manual/tutorial/generate-key-file/
+- name: Copy the keyfile for authentication between member servers
+  copy: src=secret dest={{ mongo.mongodb_datadir_prefix }}/secret owner=mongodb group=mongodb mode=0400
+
+# Copy Jinja2 template that initiates the replica set between MongoD instances
+- name: Create the file to initialize the mongod replica set
+  template: src=repset_init.j2 dest=/tmp/repset_init.js
+
+# Start MongoD service and signal handlers
+- name: Start MongoDB (mongod) service on database servers
+  service: name=mongodb state=started
+  notify:
+    - Waiting for MongoDB database service (mongod) to start
+    - Initialize MongoD Replica Set
+    - Add SECONDARY MongoD members to replica set on PRIMARY node

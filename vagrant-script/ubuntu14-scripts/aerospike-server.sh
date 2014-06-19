@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo -------- Installing Aerospike Database Server ----------------
+apt-get -y install wget
+echo starting wget ...
+#wget -qO server.tgz "http://www.aerospike.com/download/server/latest/artifact/ubuntu12"
+wget -qO server.tgz "http://www.aerospike.com/community_downloads/3.2.9/aerospike-community-server-3.2.9-ubuntu12.04.tgz"
+tar xzf server.tgz 
+dpkg -i aerospike*/aerospike*
+service aerospike start #start aerospike now
+chkconfig --add aerospike # start aerospike on boot

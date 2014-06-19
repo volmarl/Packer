@@ -1,0 +1,98 @@
+#!/bin/bash
+# Wrapper script to control regionserver daemon using ansible's service action
+
+### BEGIN INIT INFO
+# Provides:          hadoop-hbase-regionserver
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Control hbase regionserver process
+# Description:       Control hbase regionserver process
+### END INIT INFO
+
+# echo "Called: hadoop-hbase-regionserver $*"
+usage="Usage: hadoop-hbase-regionserver (start|stop|restart|status)"
+# if no args specified, show usage
+if [ $# -lt 1 ]; then
+    echo $usage
+    exit 1
+fi
+action="$1"
+
+# ensure pid dir exists w/ correct permissions
+[ -d {{ hadoop.hbase_pid_dir }} ] || install -o {{ hadoop.hbase_user }} -g {{ hadoop.hadoop_group }} -m 0755 -d {{ hadoop.hbase_pid_dir }}
+pid={{ hadoop.hbase_pid_dir }}/hbase-{{ cluster_name }}-regionserver.pid
+
+if [ -f "{{ hadoop.hbase_conf_dir }}/hbase-env.sh" ]; then
+  . "{{ hadoop.hbase_conf_dir }}/hbase-env.sh"
+fi
+
+start_svc()
+{
+    # set open file and process limits high enough
+    ulimit -n 32768
+    ulimit -u 32768
+    su - {{ hadoop.hbase_user }} -c "/usr/lib/hbase/bin/hbase-daemon.sh --config {{ hadoop.hbase_conf_dir }} start regionserver"
+}
+
+stop_svc()
+{
+    su - {{ hadoop.hbase_user }} -c "/usr/lib/hbase/bin/hbase-daemon.sh --config {{ hadoop.hbase_conf_dir }} stop regionserver"
+}
+
+get_status()
+{
+    if [ -f $pid ]; then
+        if kill -0 `cat $pid` > /dev/null 2>&1; then
+            echo `cat $pid`
+            return
+        fi
+    fi
+    echo 0
+}
+
+restart_svc()
+{
+    status=$(get_status)
+    if [ "$status" -gt 0 ]; then
+        stop_svc
+    fi
+    start_svc
+}
+
+case "$action" in
+
+    start)
+        # echo "action $action = start"
+        start_svc
+        ;;
+
+    stop)
+        # echo "action $action = stop"
+        stop_svc
+        ;;
+
+    restart)
+        # echo "action $action = restart"
+        restart_svc
+        ;;
+
+    status)
+        # echo "action $action = status"
+        rpid=$(get_status)
+        if [ "$rpid" -gt 0 ]; then
+            echo "hadoop-hbase-regionserver start/running, process $rpid"
+        else
+            echo "hadoop-hbase-regionserver stop/waiting"
+            exit 1
+        fi
+        ;;
+
+    *)
+        # echo "action $action = ???"
+        echo $usage
+        exit 1
+        ;;
+
+esac

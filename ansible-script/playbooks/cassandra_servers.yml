@@ -1,0 +1,14 @@
+---
+# file: servers.yml
+
+- hosts: all
+  sudo: no
+  gather_facts: yes
+  roles:
+    - common/pre
+    - cassandra/common
+
+- hosts: cassandra
+  roles:
+    - cassandra/cassandra
+    - common/post

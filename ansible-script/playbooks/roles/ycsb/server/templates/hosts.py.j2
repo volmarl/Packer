@@ -1,0 +1,28 @@
+from fabric.api import env
+import pytz
+
+#user name to ssh to hosts
+env.user = 'root'
+#user password (the better is to use pubkey authentication)
+env.password = 'thumbtack'
+
+env.show = ['debug']
+
+{% set client_ips = [] -%}
+{% for client_hostname in groups['ycsb-all'] -%}
+    {{ client_ips.append("'" + hostvars[client_hostname]['ansible_eth1']['ipv4']['address'] + "'") | default("",True) }}
+{%- endfor %}
+
+env.roledefs = {
+    #list of client hosts
+    'client': [{{ ",".join(client_ips) }}],
+
+    #list of server hosts
+    'server': ['{{ ycsb_server_ip }}'],
+
+    #list of all available client hosts
+    'all_client': [{{ ",".join(client_ips) }}]
+}
+
+#hosts timezone (required to correctly schedule ycsb tasks)
+timezone = pytz.timezone('US/Pacific')

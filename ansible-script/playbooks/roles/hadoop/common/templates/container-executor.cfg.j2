@@ -1,0 +1,20 @@
+yarn.nodemanager.local-dirs=
+      {%- if hadoop['data_raw_disks'] -%}
+        {%- for i in range(hostvars[groups['datanode'][0]]['rawdev_list'] | count) -%}
+          {{ 'file://' ~ hadoop['dfs_data_dir_prefix'] ~ '/' ~ i ~ '/' ~ hadoop['yarn_local_dir_suffix'] }}
+          {%- if not loop.last -%}, {% endif -%}
+        {%- endfor -%}
+      {%- else -%}
+        {{ 'file://' + hadoop['dfs_data_dir_prefix'] ~ '/' ~ hadoop['yarn_local_dir_suffix'] }}
+      {%- endif %}
+yarn.nodemanager.linux-container-executor.group=hadoop
+yarn.nodemanager.log-dirs=
+      {%- if hadoop['data_raw_disks'] -%}
+        {%- for i in range(hostvars[groups['datanode'][0]]['rawdev_list'] | count) -%}
+          {{ 'file://' ~ hadoop['dfs_data_dir_prefix'] ~ '/' ~ i ~ '/' ~ hadoop['yarn_local_log_suffix'] }}
+          {%- if not loop.last -%}, {% endif -%}
+        {%- endfor -%}
+      {%- else -%}
+        {{ 'file://' + hadoop['dfs_data_dir_prefix'] ~ '/' ~ hadoop['yarn_local_log_suffix'] }}
+      {%- endif %}
+banned.users=hfds,bin,0

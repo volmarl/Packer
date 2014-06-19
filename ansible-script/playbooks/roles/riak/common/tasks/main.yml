@@ -1,0 +1,48 @@
+---
+# file: roles/riak/common/tasks/main.yml
+
+# Update apt key for downloading Riak package from Basho
+- name: Update apt and get apt-key for Riak from Basho
+  apt_key: url=http://apt.basho.com/gpg/basho.apt.key state=present
+
+# Update apt sources so we can use apt to download the Riak package 
+- name: Generate the basho.list file
+  shell: bash -c "echo deb http://apt.basho.com $(lsb_release -sc) main > /etc/apt/sources.list.d/basho.list"
+
+# Update apt cache
+- name: Update apt
+  apt: update_cache=yes
+
+# Install the Riak package 
+- name: Install riak package
+  apt: pkg=riak force=yes
+
+# For every node in Riak cluster set the ulimit http://docs.basho.com/riak/latest/ops/tuning/open-files-limit/
+- name: Set the riak ulimit performance tweaking
+  copy: src=etc_default_riak_ulimit dest=/etc/default/riak
+
+# Copy Jinja2 template of Riak configuration file to server and notify handlers 
+- name: configure app.config
+  template: src=etc_riak_app.config.j2 dest=/etc/riak/app.config
+  tags: configfiles
+  notify:
+  - restart riak
+  - wait for http
+  - wait for kv
+
+- name: configure vm.args
+  template: src=etc_riak_vm.args.j2 dest=/etc/riak/vm.args
+  tags: configfiles
+  notify:
+  - restart riak
+  - wait for http
+  - wait for kv
+
+- name: start riak
+  service: name=riak state=started
+
+- name: wait for port to become active
+  wait_for: port={{ riak.http_port }}
+
+- name: wait for riak_kv service to start
+  riak: wait_for_service=kv

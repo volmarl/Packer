@@ -1,0 +1,6 @@
+staging_dir: "/tmp/staging"
+ycsb_tarball: "https://github.com/gimballock/ycsb/archive/master.tar.gz"
+db_host_ip: "{{ hostvars[groups['db-servers'][0]]['ansible_eth1']['ipv4']['address'] }}"
+ycsb_server_ip: "{{ hostvars[groups['ycsb-server'][0]]['ansible_eth1']['ipv4']['address']  }}"
+client_threads: "{{ hostvars[inventory_hostname]['ansible_processor_vcpus'] * 8 | int }}"
+time_duration: "{{ 10 * 60 | int }}" # in secondes --> 10 min * 60 sec = 600 sec 

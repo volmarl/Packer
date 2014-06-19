@@ -1,0 +1,17 @@
+---
+# playbook for hbase regionservers
+- name: Create hbase regionserver init script
+  template: src={{ item }}.j2 dest=/etc/init.d/{{ item }} owner={{ hadoop.hdfs_user }} group={{ hadoop.hadoop_group }} mode=0755
+  with_items:
+    - hadoop-hbase-regionserver
+
+- name: Set runlevels to restart on boot for hbase regionserver init scripts
+  shell: update-rc.d {{ item }} defaults 94 6
+  with_items:
+    - hadoop-hbase-regionserver
+
+- name: Start hbase regionserver
+  service: name={{ item }} state=restarted
+  with_items:
+    - hadoop-hbase-regionserver
+

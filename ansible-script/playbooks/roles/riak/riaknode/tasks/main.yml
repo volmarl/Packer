@@ -1,0 +1,26 @@
+---
+# file: roles/riak/riaknode/tasks/main.yml
+
+- name: Create a group based on riak node type.
+  group_by: key={{ node_type }}
+
+# Collect facts about Riak using riak Ansible module stor ein riak_outputs variable
+- name: collect riak facts
+  riak: command=ping
+  register: riak_outputs
+
+# Join node to riak cluster
+- name: join riak cluster
+  riak: command=join target_node={{ hostvars[groups['last'][0]]['riak_outputs']['node_name'] }}
+  when: inventory_hostname != groups['last'][0]
+  #when: ansible_default_ipv4['address'] != groups['last'][0]
+
+# Commit changes to Riak cluster and notify handlers
+- name: plan cluster changes
+  riak: command=plan
+  notify:
+    - commit cluster changes
+    - wait for handoffs
+    - wait for ring
+
+

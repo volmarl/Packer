@@ -1,0 +1,12 @@
+*******************************************************************************
+  !!               GoGrid is currently updating this server.               !!
+  !!          Please do not modify this server while it is updating.       !!
+  !!            You can check cluster status in the GoGrid Portal.         !!
+*******************************************************************************
+
+Welcome to {{ ansible_lsb["description"] }}
+
+GoGrid Node :: {{ hostvars[inventory_hostname]['host_name'] }}
+
+Public IP:  {{ ansible_eth0["ipv4"]["address"] }}
+Private IP: {{ ansible_eth1["ipv4"]["address"] }}
